@@ -1,0 +1,34 @@
+# Copyright Dragan Dragos Ovidiu 323CAb 2023-2024
+# (am folosit un sleepday)
+
+Am folosit parti din laboratorul 4, iar pe local am 100p constant + cautare binara. 
+
+Pentru inceput am declarat global urmatoarele: 
+- rtable (tabela de rutare)
+- rtable_len (lungimea acesteia)
+- arp_table (tabelul ARP)
+- arp_table_len lungimea acestuia
+- 3 cozi unde retin: pachetele care asteapta, dimensiunea si interfata acestora.
+
+Functiile:
+
+compare_table = functia comparator pe care am folosit o in cadrul apelului functiei qsort. Sortez tabela de rutare descrescator in felul urmator: daca prefixele sunt egale atunci returnez rezultatul in functie de masca, altfel, dupa prefixul mai mare.
+
+get_best_rotue = functie care face o cautare binara prin tabel de rutare pentru a returna cea mai buna ruta (&rtable[i]), sau NULL daca nu a fost gasita.
+
+get_arp_entry = parcurg lista arp_table si returnez (&arp_table[i])
+ care se potriveste cu adresa ip (given_ip) data ca parametru.
+
+receive_arp_request = functie care primeste un pachet de tip arp_request si trimite un pachet de tip arp_reply. Schimb adresele mac pentru ETH header, la fel si la ARP header + adresele IP. La final trimit un pachet de tip ARP reply, astfel ca trebuie sa modific si tipul acestuia (arp_hdr->op = htons(2)).
+
+receive_arp_reply = functie care gestioneaza primirea unui pachet de tip arp_reply. La inceput verific daca a mai fost introdusa adresa MAC in arp_table. In caz contrar, adresa IP si adresa MAC sunt introduse in tabela ARP. Dupa este accesat headul listei de pachete si este trimis pachetul pe rtable_best_route->interface, iar la final pachetul este scos din coada.
+
+send_arp_request = functie care este apelata in momentul in care nu este gasita adresa mac pentru trimiterea unui pachet. Functia formeaza un pachet de tip ARP_request. La inceput este alocat dinamic pachetul iar dupa populat fiecare header. Se face un broadcast al pachetului cu scopul de a primi un ARP_reply cu adresa MAC. 
+
+icmp_message = functie care formeaza un pachet de tip ICMP si l trimite. Aceasta functie gestioneaza cazurile Destination unreachable si Time exceeded. Pentru inceput este alocat dinamic pachetul si populate headerele (ETH, IPv4, ICMP, IPv4, payload).
+Primul header IPv4 este construit de la 0 (alocat dinamic si completate campurile acestuia), iar cel de al doilea header IPv4 este cel primit in pachet(cel original). La finalul functiei pachetul este trimis pe aceeasi interfata.
+
+icmp_echo_request = functie care trimite un pachet ICMP de tip Echo reply. Functia modifica header-ele primite in pachet.
+
+In functia main este gestionata primirea pachetelor de tip ARP si IPv4. Pentru timiterea pachetelor de tip IPv4 in cazul in care nu este gasita adresa MAC am format o coada de pachete unde sunt introduse acestea si dupa este trimis un mesaj de tip ARP_request pentru a primi adresa MAC.
+
