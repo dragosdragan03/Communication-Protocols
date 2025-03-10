@@ -17,6 +17,8 @@ A network routing implementation that efficiently handles IPv4 packet forwarding
 
 **Technologies:** C/C++, IPv4, ARP, ICMP, Wireshark
 
+---
+
 ### 2. [HTTP Client REST API](https://github.com/dragosdragan03/Communication-Protocols/tree/main/http-client-rest-api)
 
 A command-line client that communicates with a RESTful API through HTTP messages for managing a digital library.
@@ -29,6 +31,8 @@ A command-line client that communicates with a RESTful API through HTTP messages
 - Comprehensive error handling
 
 **Technologies:** C/C++, HTTP, REST API, JSON
+
+---
 
 ### 3. [Message Manager TCP-UDP](https://github.com/dragosdragan03/Communication-Protocols/tree/main/message-manager-tcp-udp)
 
@@ -43,6 +47,8 @@ A client-server message broker facilitating communication between UDP publishers
 
 **Technologies:** C/C++, TCP, UDP, Socket Programming, Multi-client Server
 
-## Author
+---
+
+### Author
 
 Copyright © 2023-2024 Dragan Dragos Ovidiu
