@@ -1,34 +1,82 @@
-# Copyright Dragan Dragos Ovidiu 323CAb 2023-2024
-# (am folosit un sleepday)
+# Dataplane Router
 
-Am folosit parti din laboratorul 4, iar pe local am 100p constant + cautare binara. 
+## Overview
 
-Pentru inceput am declarat global urmatoarele: 
-- rtable (tabela de rutare)
-- rtable_len (lungimea acesteia)
-- arp_table (tabelul ARP)
-- arp_table_len lungimea acestuia
-- 3 cozi unde retin: pachetele care asteapta, dimensiunea si interfata acestora.
+Dataplane Router is a network routing implementation in C/C++ that efficiently handles IPv4 packet forwarding with ARP (Address Resolution Protocol) and ICMP (Internet Control Message Protocol) functionality. This project demonstrates the core functionality of a network router's data plane - the component responsible for forwarding packets based on routing decisions.
 
-Functiile:
+## Features
 
-compare_table = functia comparator pe care am folosit o in cadrul apelului functiei qsort. Sortez tabela de rutare descrescator in felul urmator: daca prefixele sunt egale atunci returnez rezultatul in functie de masca, altfel, dupa prefixul mai mare.
+- **Optimized Routing Table** with binary search implementation for fast route lookups
+- **ARP Protocol Implementation** with dynamic request/reply management
+- **IPv4 Packet Handling** with efficient forwarding mechanisms
+- **ICMP Support** for handling network errors and echo requests
+- **Packet Queuing System** to minimize packet loss during ARP resolution
 
-get_best_rotue = functie care face o cautare binara prin tabel de rutare pentru a returna cea mai buna ruta (&rtable[i]), sau NULL daca nu a fost gasita.
+## Implementation Details
 
-get_arp_entry = parcurg lista arp_table si returnez (&arp_table[i])
- care se potriveste cu adresa ip (given_ip) data ca parametru.
+### Data Structures
 
-receive_arp_request = functie care primeste un pachet de tip arp_request si trimite un pachet de tip arp_reply. Schimb adresele mac pentru ETH header, la fel si la ARP header + adresele IP. La final trimit un pachet de tip ARP reply, astfel ca trebuie sa modific si tipul acestuia (arp_hdr->op = htons(2)).
+The router maintains several critical data structures:
+- `rtable`: Routing table for making forwarding decisions
+- `arp_table`: ARP table mapping IP addresses to MAC addresses
+- Three queues for pending packets awaiting ARP resolution
 
-receive_arp_reply = functie care gestioneaza primirea unui pachet de tip arp_reply. La inceput verific daca a mai fost introdusa adresa MAC in arp_table. In caz contrar, adresa IP si adresa MAC sunt introduse in tabela ARP. Dupa este accesat headul listei de pachete si este trimis pachetul pe rtable_best_route->interface, iar la final pachetul este scos din coada.
+### Key Components
 
-send_arp_request = functie care este apelata in momentul in care nu este gasita adresa mac pentru trimiterea unui pachet. Functia formeaza un pachet de tip ARP_request. La inceput este alocat dinamic pachetul iar dupa populat fiecare header. Se face un broadcast al pachetului cu scopul de a primi un ARP_reply cu adresa MAC. 
+#### Routing Logic
 
-icmp_message = functie care formeaza un pachet de tip ICMP si l trimite. Aceasta functie gestioneaza cazurile Destination unreachable si Time exceeded. Pentru inceput este alocat dinamic pachetul si populate headerele (ETH, IPv4, ICMP, IPv4, payload).
-Primul header IPv4 este construit de la 0 (alocat dinamic si completate campurile acestuia), iar cel de al doilea header IPv4 este cel primit in pachet(cel original). La finalul functiei pachetul este trimis pe aceeasi interfata.
+The routing table is optimized using a custom comparator function (`compare_table`) and quick sort to organize routes by prefix and mask. The `get_best_route` function implements binary search to efficiently find the optimal route for each packet, significantly reducing lookup times compared to linear searching.
 
-icmp_echo_request = functie care trimite un pachet ICMP de tip Echo reply. Functia modifica header-ele primite in pachet.
+#### ARP Protocol Management
 
-In functia main este gestionata primirea pachetelor de tip ARP si IPv4. Pentru timiterea pachetelor de tip IPv4 in cazul in care nu este gasita adresa MAC am format o coada de pachete unde sunt introduse acestea si dupa este trimis un mesaj de tip ARP_request pentru a primi adresa MAC.
+The router implements a complete ARP cycle:
+- `receive_arp_request`: Processes incoming ARP requests and generates appropriate replies
+- `receive_arp_reply`: Updates the ARP table and forwards queued packets when MAC addresses are resolved
+- `send_arp_request`: Generates ARP requests when a MAC address is needed but not found in the ARP table
 
+#### ICMP Support
+
+Error handling and network diagnostics are managed through ICMP:
+- `icmp_message`: Creates ICMP packets for "Destination Unreachable" and "Time Exceeded" scenarios
+- `icmp_echo_request`: Handles ICMP echo requests (ping) by generating echo replies
+
+#### Packet Queue Management
+
+To prevent packet loss while awaiting ARP resolution, the router implements a queuing system that:
+- Stores packets that cannot be immediately forwarded due to missing MAC addresses
+- Tracks the size and interface of each queued packet
+- Processes the queue once ARP replies are received
+
+## Performance Optimizations
+
+- Binary search in the routing table reduces lookup complexity from O(n) to O(log n)
+- Efficient ARP table management minimizes unnecessary network traffic
+- Smart packet queuing improves throughput by preventing packet drops during ARP resolution
+- Header manipulation is optimized to reduce memory operations
+
+## Technical Details
+
+The router handles various network scenarios including:
+- Route lookup and packet forwarding
+- ARP resolution for unknown MAC addresses
+- ICMP error generation for unreachable destinations
+- TTL (Time To Live) management with appropriate ICMP responses
+- Packet queuing during the ARP resolution process
+
+## Usage
+
+To compile and run the Dataplane Router:
+
+```bash
+make
+./router
+```
+
+## Requirements
+
+- C/C++ compiler (GCC recommended)
+- Development libraries for network packet manipulation
+
+## License
+
+Copyright © 2023-2024 Dragan Dragos Ovidiu
