@@ -1,36 +1,135 @@
-# Copyright Dragan Dragos Ovidiu 323CAb 2023-2024
-# (am folosit 2 sleepday-uri)
+# HTTP Client REST API
 
-Pentru implementarea temei m-am folosit de laboratorul 9.
+## Overview
 
-Pentru inceput am creat 3 functii de care ma voi folosi de ele pe parcursul temei:
-1. is_number - care verifica daca un string contine doar cifre
-2. display_error - care afiseaza eraorea din cadrul mesajului primit de la server
-3. verify_code - care verifica daca mesajul primit de la server este de tip eroare (cod_eroare >= 300) sau este un cod care semnifica ca este reusit. In cazul in care pachetul contine eroare atunci o afisez.
+This project implements a command-line HTTP client that communicates with a RESTful API through HTTP messages for managing a digital library system. The client handles the construction and parsing of HTTP requests and responses, allowing users to register, log in, browse the library, and manage books through a simple text-based interface. All operations are performed by sending properly formatted HTTP GET, POST, and DELETE requests and processing the corresponding responses.
 
-Functia register -> realizează înregistrarea unui utilizator prin trimiterea unei cereri POST către un server specific. Aceasta se face in felul urmator:
-1. se citesc username-ul si parola
-2. creeaza un obiect de tip json cu informatiile citite
-3. Creează o cerere POST pentru a trimite datele de înregistrare la server.
-4.  Deschide o conexiune către server, trimite cererea și primește răspunsul de la server.
-5. Afișează un mesaj de succes în cazul în care înregistrarea este reușită, si de eroare in caz contrar.
+## Key Features
 
-Functia login_command -> realizeaza inregistrarea unui utilizator prin trimiterea unei cereri POST catre un server specific. Aceasta functie se face smilar cu cea de register. In plus, in cazul in care s-a putut face logarea, extrag cookie-ul din mesaj si il retin.
+- **User Authentication**: Register new accounts and log in with existing credentials
+- **Library Access Management**: Secure access to the library's resources using tokens
+- **Book Operations**: View, add, and delete books in the digital library
+- **JSON-based Communication**: API requests and responses using JSON format
+- **Error Handling**: Comprehensive error checking and user-friendly messages
 
-Functia enter_library_command -> se ocupa cu solicitarea accesului la o biblioteca pentru un utilizator deja autentificat. Aceasta trimite o cerere HTTP GET catre server folosind un cookie pentru a demonstra autentificarea, primeste un raspuns care contine un token de acces si verifica validitatea raspunsului. Daca raspunsul este valid, functia extrage si returneaza token-ul.
+### Available Commands
 
-Functia get_book_command -> permite utilizatorului sa obtina informatii despre o carte specifica din biblioteca, utilizand un token de acces. Aceasta verifica daca utilizatorul este autentificat si daca are acces la biblioteca, validează ID-ul cartii, construieste o cerere HTTP GET si trimite cererea catre server. Raspunsul serverului, care contine detalii despre carte, este afisat la STDOUT.
+| Command | Description |
+|---------|-------------|
+| `register` | Create a new user account |
+| `login` | Authenticate with username and password |
+| `enter_library` | Access the library with your authenticated session |
+| `get_books` | View all books in the library |
+| `get_book` | View details of a specific book by ID |
+| `add_book` | Add a new book to the library |
+| `delete_book` | Remove a book from the library |
+| `logout` | End the current session |
+| `exit` | Quit the application |
 
-Functia get_books_command ->  permite utilizatorului sa obtina o listă de carti din biblioteca. Aceasta functie este similara cu functia get_book.
+### Command Flow
 
-Functia add_book_command -> permite utilizatorului sa adauge o noua carte in biblioteca digitala, utilizand un token de acces. Aceasta verifica daca utilizatorul este autentificat si daca are acces la biblioteca, citeste detaliile cartii de la utilizator, construieste un obiect JSON cu aceste detalii, si trimite o cerere HTTP POST catre server pentru a adauga cartea. Daca raspunsul de la server indica succes, afiseaza un mesaj de confirmare.
+1. Start by registering an account (`register`) or logging in (`login`)
+2. Access the library (`enter_library`) to get authorization for book operations
+3. Perform book operations (`get_books`, `get_book`, `add_book`, `delete_book`)
+4. Log out when finished (`logout`)
 
-Functia delete_book_command -> permite utilizatorului sa stearga o carte din biblioteca, utilizand un token de acces. Utilizatorul este solicitat sa introduca ID-ul cartii pe care doreste sa o stearga, iar functia verifica daca utilizatorul este autentificat si are acces la biblioteca inainte de a trimite o cerere de stergere catre server. Creeaza cererea HTTP DELETE pentru a trimite cererea de stergere catre server.
+## Implementation Details
 
-Functia logout -> permite utlizatorului sa se delogheze de la serviciul de autentificare al aplicatiei. Aceasta trimite o cerere HTTP GET catre server pentru a efectua operatiunea de delogare utilizand cookie-ul de autentificare furnizat.
+### Core Functionality
 
-Functia compute_get_request -> construieste si returneaza un mesaj HTTP de tip GET care poate fi trimis catre un server pentru a cere o resursa.
+- **HTTP Request Management**: Custom implementation of GET, POST, and DELETE HTTP methods
+- **Session Management**: Maintaining user sessions with cookies and tokens
+- **Input Validation**: Ensuring proper format for IDs and other inputs
+- **Error Reporting**: Clear error messages for debugging and user guidance
 
-Functia compute_post_request -> construiește și returnează un mesaj HTTP de tip POST care poate fi trimis către un server pentru a trimite date.
+### Main Components
 
-Am ales sa utilizez biblioteca "nlohmann/json" pentru a putea crea cu usurinta obiecte JSON si pentru a le trimite ca parametrii in cadrul functiilor compute_get_request si compute_post_request.
+#### Utility Functions
+- `display_error()`: Formats and displays server error messages
+- `verify_code()`: Interprets HTTP status codes for error handling
+
+#### User Authentication
+- `register_command()`: Handles new user registration
+- `login_command()`: Manages user login and session cookies
+- `logout_command()`: Terminates user sessions
+
+#### Library Access
+- `enter_library_command()`: Obtains library access token
+
+#### Book Management
+- `get_books_command()`: Retrieves all books in the library
+- `get_book_command()`: Fetches details for a specific book
+- `add_book_command()`: Creates new book entries
+- `delete_book_command()`: Removes books from the library
+
+## API Endpoints
+
+The client interacts with the following endpoints:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/tema/auth/register` | POST | Register a new user |
+| `/api/v1/tema/auth/login` | POST | Authenticate user |
+| `/api/v1/tema/auth/logout` | GET | End user session |
+| `/api/v1/tema/library/access` | GET | Get library access token |
+| `/api/v1/tema/library/books` | GET | Get all books |
+| `/api/v1/tema/library/books` | POST | Add a new book |
+| `/api/v1/tema/library/books/{id}` | GET | Get book by ID |
+| `/api/v1/tema/library/books/{id}` | DELETE | Delete book by ID |
+
+## Example Workflow
+
+```
+$ ./client
+register
+username=testuser
+password=testpass
+SUCCES: Utilizator înregistrat cu succes!
+
+login
+username=testuser
+password=testpass
+SUCCES: Utilizatorul a fost logat cu succes
+
+enter_library
+SUCCES: Utilizatorul are acces la biblioteca
+
+get_books
+[{"id":1234,"title":"Test Book"}]
+
+add_book
+title=My New Book
+author=John Doe
+genre=Mystery
+publisher=Test Publishing
+page_count=250
+Cartea a fost adaugata cu succes!
+
+logout
+SUCCES: Utilizatorul s-a delogat cu succes!
+
+exit
+```
+
+
+## Prerequisites
+
+- C++ compiler with C++11 support
+- [nlohmann/json](https://github.com/nlohmann/json) library for JSON handling
+
+## Usage
+
+### Compiling
+```bash
+g++ -o client client.cpp requests.cpp helpers.cpp -std=c++11
+```
+
+### Running
+```bash
+./client
+```
+
+
+## License
+
+Copyright © 2023-2024 Dragan Dragos Ovidiu
